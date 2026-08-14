@@ -3,7 +3,7 @@ export function bubbleCursor(options) {
   let element = hasWrapperEl || document.body;
   let fillColor = options && options.fillColor ? options.fillColor : "#e6f1f7";
   let strokeColor = options && options.strokeColor ? options.strokeColor : "#3a92c5";
-  
+
   let width = window.innerWidth;
   let height = window.innerHeight;
   let cursor = { x: width / 2, y: width / 2 };
@@ -60,9 +60,13 @@ export function bubbleCursor(options) {
 
   // Bind events that are needed
   function bindEvents() {
-    element.addEventListener("mousemove", onMouseMove);
-    element.addEventListener("touchmove", onTouchMove, { passive: true });
-    element.addEventListener("touchstart", onTouchMove, { passive: true });
+    if ("onpointermove" in window) {
+      element.addEventListener("pointermove", onMouseMove);
+    } else {
+      element.addEventListener("mousemove", onMouseMove);
+      element.addEventListener("touchmove", onTouchMove, { passive: true });
+      element.addEventListener("touchstart", onTouchMove, { passive: true });
+    }
     window.addEventListener("resize", onWindowResize);
   }
 
@@ -140,10 +144,15 @@ export function bubbleCursor(options) {
   function destroy() {
     canvas.remove();
     cancelAnimationFrame(animationFrame);
-    element.removeEventListener("mousemove", onMouseMove);
-    element.removeEventListener("touchmove", onTouchMove);
-    element.removeEventListener("touchstart", onTouchMove);
-    window.addEventListener("resize", onWindowResize);
+    if ("onpointermove" in window) {
+      element.removeEventListener("pointermove", onMouseMove);
+    } else {
+      element.removeEventListener("mousemove", onMouseMove);
+      element.removeEventListener("touchmove", onTouchMove, { passive: true });
+      element.removeEventListener("touchstart", onTouchMove, { passive: true });
+
+    }
+    window.removeEventListener("resize", onWindowResize);
   };
 
   function Particle(x, y, canvasItem) {

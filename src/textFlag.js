@@ -26,10 +26,10 @@ export function textFlag(options) {
   let height = window.innerHeight;
   let cursor = { x: width / 2, y: width / 2 };
 
-  charArray = Array.from(text).map(char => ({ 
-    letter: char, 
-    x: width / 2, 
-    y: width / 2 
+  charArray = Array.from(text).map(char => ({
+    letter: char,
+    x: width / 2,
+    y: width / 2
   }));
 
   let canvas, context, animationFrame;
@@ -145,9 +145,16 @@ export function textFlag(options) {
   function destroy() {
     canvas.remove();
     cancelAnimationFrame(animationFrame);
-    element.removeEventListener("mousemove", onMouseMove);
-    window.addEventListener("resize", onWindowResize);
-  }
+    if ("onpointermove" in window) {
+      element.removeEventListener("pointermove", onMouseMove);
+    } else {
+      element.removeEventListener("mousemove", onMouseMove);
+      element.removeEventListener("touchmove", onTouchMove, { passive: true });
+      element.removeEventListener("touchstart", onTouchMove, { passive: true });
+
+    }
+    window.removeEventListener("resize", onWindowResize);
+  };
 
   init();
 

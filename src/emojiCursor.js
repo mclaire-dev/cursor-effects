@@ -85,9 +85,13 @@ export function emojiCursor(options) {
 
   // Bind events that are needed
   function bindEvents() {
-    element.addEventListener("mousemove", onMouseMove, { passive: true });
-    element.addEventListener("touchmove", onTouchMove, { passive: true });
-    element.addEventListener("touchstart", onTouchMove, { passive: true });
+    if ("onpointermove" in window) {
+      element.addEventListener("pointermove", onMouseMove);
+    } else {
+      element.addEventListener("mousemove", onMouseMove);
+      element.addEventListener("touchmove", onTouchMove, { passive: true });
+      element.addEventListener("touchstart", onTouchMove, { passive: true });
+    }
     window.addEventListener("resize", onWindowResize);
   }
 
@@ -187,11 +191,16 @@ export function emojiCursor(options) {
   function destroy() {
     canvas.remove();
     cancelAnimationFrame(animationFrame);
-    element.removeEventListener("mousemove", onMouseMove);
-    element.removeEventListener("touchmove", onTouchMove);
-    element.removeEventListener("touchstart", onTouchMove);
-    window.addEventListener("resize", onWindowResize);
-  }
+    if ("onpointermove" in window) {
+      element.removeEventListener("pointermove", onMouseMove);
+    } else {
+      element.removeEventListener("mousemove", onMouseMove);
+      element.removeEventListener("touchmove", onTouchMove, { passive: true });
+      element.removeEventListener("touchstart", onTouchMove, { passive: true });
+
+    }
+    window.removeEventListener("resize", onWindowResize);
+  };
 
   /**
    * Particles
