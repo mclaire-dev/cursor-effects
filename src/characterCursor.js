@@ -24,19 +24,19 @@ export function characterCursor(options) {
   }
 
   // Generates the lifespan for individual characters
-  let characterLifeSpanFunction = options?.characterLifeSpanFunction || 
+  let characterLifeSpanFunction = options?.characterLifeSpanFunction ||
   function() {
-    return Math.floor(Math.random() * 60 + 80);
-  }
+      return Math.floor(Math.random() * 60 + 80);
+    }
 
   // Defines the original velocity for the character
-  let initialCharacterVelocityFunction = options?.initialCharacterVelocityFunction || 
-  function() {
-    return {
-      x: (Math.random() < 0.5 ? -1 : 1) * Math.random() * 5,
-      y: (Math.random() < 0.5 ? -1 : 1) * Math.random() * 5,
-  }
-  };
+  let initialCharacterVelocityFunction = options?.initialCharacterVelocityFunction ||
+    function() {
+      return {
+        x: (Math.random() < 0.5 ? -1 : 1) * Math.random() * 5,
+        y: (Math.random() < 0.5 ? -1 : 1) * Math.random() * 5,
+      }
+    };
 
   // Defines how the velocity should change (additively)
   let characterVelocityChangeFunctions = options?.characterVelocityChangeFunctions || {
@@ -55,11 +55,11 @@ export function characterCursor(options) {
   }
 
   // Produces new angles for the character
-  let characterNewRotationDegreesFunction = options?.characterNewRotationDegreesFunction || 
-  function(age, lifeSpan) {
-    let lifeLeft = lifeSpan - age;
-    return lifeLeft / 5;
-  };
+  let characterNewRotationDegreesFunction = options?.characterNewRotationDegreesFunction ||
+    function(age, lifeSpan) {
+      let lifeLeft = lifeSpan - age;
+      return lifeLeft / 5;
+    };
 
   let canvImages = [];
 
@@ -138,9 +138,26 @@ export function characterCursor(options) {
 
   // Bind events that are needed
   function bindEvents() {
-    element.addEventListener("mousemove", onMouseMove);
-    element.addEventListener("touchmove", onTouchMove, { passive: true });
-    element.addEventListener("touchstart", onTouchMove, { passive: true });
+    if ("onpointermove" in window && "onpointerenter" in window) {
+      element.addEventListener("pointerenter", onPointerMove);
+      element.addEventListener("pointermove", onPointerMove);
+
+      element.addEventListener("touchmove", onTouchMove, {
+        passive: true,
+      });
+
+      element.addEventListener("touchstart", onTouchMove, {
+        passive: true,
+      });
+    } else {
+      element.addEventListener("mousemove", onMouseMove);
+      element.addEventListener("touchmove", onTouchMove, {
+        passive: true,
+      });
+      element.addEventListener("touchstart", onTouchMove, {
+        passive: true,
+      });
+    }
     window.addEventListener("resize", onWindowResize);
   }
 
@@ -168,6 +185,12 @@ export function characterCursor(options) {
       }
     }
   }
+  function onPointerMove(e) {
+    if (e.pointerType === "touch") {
+      return;
+    }
+    onMouseMove(e);
+  }
 
   function onMouseMove(e) {
     if (hasWrapperEl) {
@@ -183,6 +206,7 @@ export function characterCursor(options) {
       cursor.x,
       cursor.y,
       canvImages[Math.floor(Math.random() * possibleCharacters.length)]
+
     );
   }
 
@@ -222,9 +246,16 @@ export function characterCursor(options) {
   function destroy() {
     canvas.remove();
     cancelAnimationFrame(animationFrame);
-    element.removeEventListener("mousemove", onMouseMove);
-    element.removeEventListener("touchmove", onTouchMove);
-    element.removeEventListener("touchstart", onTouchMove);
+    if ("onpointermove" in window && "onpointerenter" in window) {
+      element.removeEventListener("pointerenter", onPointerMove);
+      element.removeEventListener("pointermove", onPointerMove);
+      element.removeEventListener("touchmove", onTouchMove);
+      element.removeEventListener("touchstart", onTouchMove);
+    } else {
+      element.removeEventListener("mousemove", onMouseMove);
+      element.removeEventListener("touchmove", onTouchMove);
+      element.removeEventListener("touchstart", onTouchMove);
+    }
     window.addEventListener("resize", onWindowResize);
   };
 

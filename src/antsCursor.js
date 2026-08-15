@@ -65,9 +65,24 @@ export function antsCursor(options) {
   }
 
   function bindEvents() {
-    element.addEventListener("mousemove", onMouseMove);
-    element.addEventListener("touchmove", onTouchMove, { passive: true });
-    element.addEventListener("touchstart", onTouchMove, { passive: true });
+    if ("onpointermove" in window && "onpointerenter" in window) {
+      element.addEventListener("pointerenter", onPointerMove);
+      element.addEventListener("pointermove", onPointerMove);
+      element.addEventListener("touchmove", onTouchMove, {
+        passive: true,
+      });
+      element.addEventListener("touchstart", onTouchMove, {
+        passive: true,
+      });
+    } else {
+      element.addEventListener("mousemove", onMouseMove);
+      element.addEventListener("touchmove", onTouchMove, {
+        passive: true,
+      });
+      element.addEventListener("touchstart", onTouchMove, {
+        passive: true,
+      });
+    }
     window.addEventListener("resize", onWindowResize);
   }
 
@@ -95,6 +110,13 @@ export function antsCursor(options) {
         cursor.y = e.touches[0].clientY;
       }
     }
+  }
+
+  function onPointerMove(e) {
+    if (e.pointerType === "touch") {
+      return;
+    }
+    onMouseMove(e);
   }
 
   function onMouseMove(e) {
@@ -191,10 +213,17 @@ export function antsCursor(options) {
   function destroy() {
     canvas.remove();
     cancelAnimationFrame(animationFrame);
-    element.removeEventListener("mousemove", onMouseMove);
-    element.removeEventListener("touchmove", onTouchMove);
-    element.removeEventListener("touchstart", onTouchMove);
-    window.removeEventListener("resize", onWindowResize);
+    if ("onpointermove" in window && "onpointerenter" in window) {
+      element.removeEventListener("pointerenter", onPointerMove);
+      element.removeEventListener("pointermove", onPointerMove);
+      element.removeEventListener("touchmove", onTouchMove);
+      element.removeEventListener("touchstart", onTouchMove);
+    } else {
+      element.removeEventListener("mousemove", onMouseMove);
+      element.removeEventListener("touchmove", onTouchMove);
+      element.removeEventListener("touchstart", onTouchMove);
+    }
+    window.addEventListener("resize", onWindowResize);
   }
 
   function Ant(x, y, index) {

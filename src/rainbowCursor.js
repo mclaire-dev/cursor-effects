@@ -68,7 +68,24 @@ export function rainbowCursor(options) {
 
   // Bind events that are needed
   function bindEvents() {
-    element.addEventListener("mousemove", onMouseMove);
+    if ("onpointermove" in window && "onpointerenter" in window) {
+      element.addEventListener("pointerenter", onPointerMove);
+      element.addEventListener("pointermove", onPointerMove);
+      element.addEventListener("touchmove", onTouchMove, {
+        passive: true,
+      });
+      element.addEventListener("touchstart", onTouchMove, {
+        passive: true,
+      });
+    } else {
+      element.addEventListener("mousemove", onMouseMove);
+      element.addEventListener("touchmove", onTouchMove, {
+        passive: true,
+      });
+      element.addEventListener("touchstart", onTouchMove, {
+        passive: true,
+      });
+    }
     window.addEventListener("resize", onWindowResize);
   }
 
@@ -83,6 +100,32 @@ export function rainbowCursor(options) {
       canvas.width = width;
       canvas.height = height;
     }
+  }
+  function onTouchMove(e) {
+    if (e.touches.length > 0) {
+      const touch = e.touches[0];
+      if (hasWrapperEl) {
+        const boundingRect = element.getBoundingClientRect();
+        cursor.x = touch.clientX - boundingRect.left;
+        cursor.y = touch.clientY - boundingRect.top;
+      } else {
+        cursor.x = touch.clientX;
+        cursor.y = touch.clientY;
+      }
+      if (cursorsInitted === false) {
+        cursorsInitted = true;
+        for (let i = 0; i < totalParticles; i++) {
+          addParticle(cursor.x, cursor.y);
+        }
+      }
+    }
+  }
+
+  function onPointerMove(e) {
+    if (e.pointerType === "touch") {
+      return;
+    }
+    onMouseMove(e);
   }
 
   function onMouseMove(e) {
@@ -159,7 +202,16 @@ export function rainbowCursor(options) {
   function destroy() {
     canvas.remove();
     cancelAnimationFrame(animationFrame);
-    element.removeEventListener("mousemove", onMouseMove);
+    if ("onpointermove" in window && "onpointerenter" in window) {
+      element.removeEventListener("pointerenter", onPointerMove);
+      element.removeEventListener("pointermove", onPointerMove);
+      element.removeEventListener("touchmove", onTouchMove);
+      element.removeEventListener("touchstart", onTouchMove);
+    } else {
+      element.removeEventListener("mousemove", onMouseMove);
+      element.removeEventListener("touchmove", onTouchMove);
+      element.removeEventListener("touchstart", onTouchMove);
+    }
     window.addEventListener("resize", onWindowResize);
   };
 
