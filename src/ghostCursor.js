@@ -66,19 +66,29 @@ export function ghostCursor(options) {
     loop();
   }
 
-  // Bind events that are needed
   function bindEvents() {
-    if ("onpointermove" in window) {
-      element.addEventListener("pointermove", onMouseMove);
+    if ("onpointermove" in window && "onpointerenter" in window) {
+      element.addEventListener("pointerenter", onPointerMove);
+      element.addEventListener("pointermove", onPointerMove);
+      element.addEventListener("touchmove", onTouchMove, {
+        passive: true,
+      });
+      element.addEventListener("touchstart", onTouchMove, {
+        passive: true,
+      });
     } else {
       element.addEventListener("mousemove", onMouseMove);
-      element.addEventListener("touchmove", onTouchMove, { passive: true });
-      element.addEventListener("touchstart", onTouchMove, { passive: true });
+      element.addEventListener("touchmove", onTouchMove, {
+        passive: true,
+      });
+      element.addEventListener("touchstart", onTouchMove, {
+        passive: true,
+      });
     }
     window.addEventListener("resize", onWindowResize);
   }
 
-  function onWindowResize(e) {
+  function onWindowResize() {
     width = window.innerWidth;
     height = window.innerHeight;
 
@@ -94,14 +104,31 @@ export function ghostCursor(options) {
   function onTouchMove(e) {
     if (e.touches.length > 0) {
       for (let i = 0; i < e.touches.length; i++) {
-        addParticle(e.touches[i].clientX, e.touches[i].clientY, baseImage);
+        let x;
+        let y;
+        if (hasWrapperEl) {
+          const boundingRect = element.getBoundingClientRect();
+          x = e.touches[i].clientX - boundingRect.left;
+          y = e.touches[i].clientY - boundingRect.top;
+        } else {
+          x = e.touches[i].clientX;
+          y = e.touches[i].clientY;
+        }
+        addParticle(x, y, baseImage);
       }
     }
   }
+  function onPointerMove(e) {
+    if (e.pointerType === "touch") {
+      return;
+    }
+    onMouseMove(e);
+  }
 
-  let getDelay = () => Math.floor(Math.random() * (maxDelay - minDelay + 1)) + minDelay;
-  let lastTimeParticleAdded = Date.now(),
-    interval = getDelay();
+  let getDelay = () =>
+    Math.floor(Math.random() * (maxDelay - minDelay + 1)) + minDelay;
+  let lastTimeParticleAdded = Date.now();
+      interval = getDelay();
 
   function onMouseMove(e) {
     if (randomDelay) {
@@ -158,31 +185,36 @@ export function ghostCursor(options) {
   function destroy() {
     canvas.remove();
     cancelAnimationFrame(animationFrame);
-    if ("onpointermove" in window) {
-      element.removeEventListener("pointermove", onMouseMove);
+    if ("onpointermove" in window && "onpointerenter" in window) {
+      element.removeEventListener("pointerenter", onPointerMove);
+      element.removeEventListener("pointermove", onPointerMove);
+      element.removeEventListener("touchmove", onTouchMove);
+      element.removeEventListener("touchstart", onTouchMove);
     } else {
       element.removeEventListener("mousemove", onMouseMove);
-      element.removeEventListener("touchmove", onTouchMove, { passive: true });
-      element.removeEventListener("touchstart", onTouchMove, { passive: true });
-
+      element.removeEventListener("touchmove", onTouchMove);
+      element.removeEventListener("touchstart", onTouchMove);
     }
-    window.removeEventListener("resize", onWindowResize);
-  };
 
-  /**
+    window.addEventListener("resize", onWindowResize);
+  }
+    /**
    * Particles
    */
 
   function Particle(x, y, image) {
-    this.initialLifeSpan = lifeSpan; //ms
-    this.lifeSpan = lifeSpan; //ms
-    this.position = { x: x, y: y };
-
+    this.initialLifeSpan = lifeSpan;
+    this.lifeSpan = lifeSpan;
+    this.position = { x, y };
     this.image = image;
 
     this.update = function (context) {
       this.lifeSpan--;
-      const opacity = Math.max(this.lifeSpan / this.initialLifeSpan, 0);
+
+      const opacity = Math.max(
+        this.lifeSpan / this.initialLifeSpan,
+        0
+      );
 
       context.globalAlpha = opacity;
       context.drawImage(

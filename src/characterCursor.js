@@ -10,7 +10,7 @@ export function characterCursor(options) {
     "#B59194",
     "#D2A1B8",
   ];
-  let cursorOffset = options?.cursorOffset || { x: 0, y: 0 };
+  let cursorOffset = options?.cursorOffset || {x: 0, y: 0}; 
   let width = window.innerWidth;
   let height = window.innerHeight;
   let cursor = { x: width / 2, y: width / 2 };
@@ -19,19 +19,19 @@ export function characterCursor(options) {
 
   let font = options?.font || "15px serif"
 
-  let randomPositiveOrNegativeOne = function () {
+  let randomPositiveOrNegativeOne = function() {
     return (Math.random() < 0.5 ? -1 : 1);
   }
 
   // Generates the lifespan for individual characters
   let characterLifeSpanFunction = options?.characterLifeSpanFunction ||
-    function () {
+  function() {
       return Math.floor(Math.random() * 60 + 80);
     }
 
   // Defines the original velocity for the character
   let initialCharacterVelocityFunction = options?.initialCharacterVelocityFunction ||
-    function () {
+    function() {
       return {
         x: (Math.random() < 0.5 ? -1 : 1) * Math.random() * 5,
         y: (Math.random() < 0.5 ? -1 : 1) * Math.random() * 5,
@@ -40,23 +40,23 @@ export function characterCursor(options) {
 
   // Defines how the velocity should change (additively)
   let characterVelocityChangeFunctions = options?.characterVelocityChangeFunctions || {
-    x_func: function (age, lifeSpan) {
-      return (Math.random() < 0.5 ? -1 : 1) / 30;
-    },
-    y_func: function (age, lifeSpan) {
-      return (Math.random() < 0.5 ? -1 : 1) / 15;
-    },
-  };
+      x_func: function(age, lifeSpan) {
+        return (Math.random() < 0.5 ? -1 : 1)/30;
+      },
+      y_func: function(age, lifeSpan) {
+        return (Math.random() < 0.5 ? -1 : 1)/ 15;
+      },
+    };
 
-  let characterScalingFunction = options?.characterScalingFunction ||
-    function (age, lifeSpan) {
-      let lifeLeft = lifeSpan - age;
-      return Math.max(lifeLeft / lifeSpan * 2, 0);
-    }
+  let characterScalingFunction = options?.characterScalingFunction || 
+  function(age, lifeSpan) {
+    let lifeLeft = lifeSpan - age;
+    return Math.max(lifeLeft / lifeSpan * 2, 0);
+  }
 
   // Produces new angles for the character
   let characterNewRotationDegreesFunction = options?.characterNewRotationDegreesFunction ||
-    function (age, lifeSpan) {
+    function(age, lifeSpan) {
       let lifeLeft = lifeSpan - age;
       return lifeLeft / 5;
     };
@@ -138,12 +138,25 @@ export function characterCursor(options) {
 
   // Bind events that are needed
   function bindEvents() {
-    if ("onpointermove" in window) {
-      element.addEventListener("pointermove", onMouseMove);
+    if ("onpointermove" in window && "onpointerenter" in window) {
+      element.addEventListener("pointerenter", onPointerMove);
+      element.addEventListener("pointermove", onPointerMove);
+
+      element.addEventListener("touchmove", onTouchMove, {
+        passive: true,
+      });
+
+      element.addEventListener("touchstart", onTouchMove, {
+        passive: true,
+      });
     } else {
       element.addEventListener("mousemove", onMouseMove);
-      element.addEventListener("touchmove", onTouchMove, { passive: true });
-      element.addEventListener("touchstart", onTouchMove, { passive: true });
+      element.addEventListener("touchmove", onTouchMove, {
+        passive: true,
+      });
+      element.addEventListener("touchstart", onTouchMove, {
+        passive: true,
+      });
     }
     window.addEventListener("resize", onWindowResize);
   }
@@ -172,6 +185,12 @@ export function characterCursor(options) {
       }
     }
   }
+  function onPointerMove(e) {
+    if (e.pointerType === "touch") {
+      return;
+    }
+    onMouseMove(e);
+  }
 
   function onMouseMove(e) {
     if (hasWrapperEl) {
@@ -187,6 +206,7 @@ export function characterCursor(options) {
       cursor.x,
       cursor.y,
       canvImages[Math.floor(Math.random() * possibleCharacters.length)]
+
     );
   }
 
@@ -226,15 +246,17 @@ export function characterCursor(options) {
   function destroy() {
     canvas.remove();
     cancelAnimationFrame(animationFrame);
-    if ("onpointermove" in window) {
-      element.removeEventListener("pointermove", onMouseMove);
+    if ("onpointermove" in window && "onpointerenter" in window) {
+      element.removeEventListener("pointerenter", onPointerMove);
+      element.removeEventListener("pointermove", onPointerMove);
+      element.removeEventListener("touchmove", onTouchMove);
+      element.removeEventListener("touchstart", onTouchMove);
     } else {
       element.removeEventListener("mousemove", onMouseMove);
-      element.removeEventListener("touchmove", onTouchMove, { passive: true });
-      element.removeEventListener("touchstart", onTouchMove, { passive: true });
-
+      element.removeEventListener("touchmove", onTouchMove);
+      element.removeEventListener("touchstart", onTouchMove);
     }
-    window.removeEventListener("resize", onWindowResize);
+    window.addEventListener("resize", onWindowResize);
   };
 
   /**
@@ -248,9 +270,9 @@ export function characterCursor(options) {
     this.initialLifeSpan = lifeSpan; //
     this.lifeSpan = lifeSpan; //ms
     this.velocity = initialCharacterVelocityFunction();
-    this.position = {
-      x: x + cursorOffset.x,
-      y: y + cursorOffset.y
+    this.position = { 
+      x: x + cursorOffset.x, 
+      y: y + cursorOffset.y 
     };
     this.canv = canvasItem;
 

@@ -31,7 +31,7 @@ export function fairyDustCursor(options) {
   };
 
   function init() {
-    // Don't show the cursor trail if the user has prefers-reduced-motion enabled
+    // Don't show the cursor trail if the user has prefers reduced motion enabled
     if (prefersReducedMotion.matches) {
       console.log(
         "This browser has prefers reduced motion turned on, so the cursor did not init"
@@ -91,14 +91,28 @@ export function fairyDustCursor(options) {
 
   // Bind events that are needed
   function bindEvents() {
-    if ("onpointermove" in window) {
-      element.addEventListener("pointermove", onMouseMove);
+    if ("onpointermove" in window && "onpointerenter" in window) {
+      element.addEventListener("pointerenter", onPointerMove);
+      element.addEventListener("pointermove", onPointerMove);
+      element.addEventListener("touchmove", onTouchMove, {
+        passive: true,
+      });
+      element.addEventListener("touchstart", onTouchMove, {
+        passive: true,
+      });
     } else {
       element.addEventListener("mousemove", onMouseMove);
-      element.addEventListener("touchmove", onTouchMove, { passive: true });
-      element.addEventListener("touchstart", onTouchMove, { passive: true });
+      element.addEventListener("touchmove", onTouchMove, {
+        passive: true,
+      });
+      element.addEventListener("touchstart", onTouchMove, {
+        passive: true,
+      });
     }
     window.addEventListener("resize", onWindowResize);
+    window.addEventListener("scroll", onWindowScroll, {
+      passive: true,
+    });
   }
 
   function onWindowResize(e) {
@@ -113,21 +127,48 @@ export function fairyDustCursor(options) {
       canvas.height = height;
     }
   }
+  function onWindowScroll() {
+    if (hasWrapperEl) {
+      const boundingRect = element.getBoundingClientRect();
+
+      cursor.x = cursor.clientX - boundingRect.left;
+      cursor.y = cursor.clientY - boundingRect.top;
+    }
+  }
 
   function onTouchMove(e) {
     if (e.touches.length > 0) {
       for (let i = 0; i < e.touches.length; i++) {
+        cursor.clientX = e.touches[i].clientX;
+        cursor.clientY = e.touches[i].clientY;
+        if (hasWrapperEl) {
+          const boundingRect = element.getBoundingClientRect();
+          cursor.x = e.touches[i].clientX - boundingRect.left;
+          cursor.y = e.touches[i].clientY - boundingRect.top;
+        } else {
+          cursor.x = e.touches[i].clientX;
+          cursor.y = e.touches[i].clientY;
+        }
+
         addParticle(
-          e.touches[i].clientX,
-          e.touches[i].clientY,
+          cursor.x,
+          cursor.y,
           canvImages[Math.floor(Math.random() * canvImages.length)]
         );
       }
     }
   }
+  function onPointerMove(e) {
+    if (e.pointerType === "touch") {
+      return;
+    }
+    onMouseMove(e);
+  }
 
   function onMouseMove(e) {
     window.requestAnimationFrame(() => {
+      cursor.clientX = e.clientX;
+      cursor.clientY = e.clientY;
       if (hasWrapperEl) {
         const boundingRect = element.getBoundingClientRect();
         cursor.x = e.clientX - boundingRect.left;
@@ -189,17 +230,22 @@ export function fairyDustCursor(options) {
   }
 
   function destroy() {
-    canvas.remove();
+    if (canvas) {
+      canvas.remove();
+    }
     cancelAnimationFrame(animationFrame);
-        if ("onpointermove" in window) {
-  element.removeEventListener("pointermove", onMouseMove);
-} else {
-  element.removeEventListener("mousemove", onMouseMove);
-      element.removeEventListener("touchmove", onTouchMove, { passive: true });
-    element.removeEventListener("touchstart", onTouchMove, { passive: true });
-    
-}
-    window.removeEventListener("resize", onWindowResize);
+    if ("onpointermove" in window && "onpointerenter" in window) {
+      element.removeEventListener("pointerenter", onPointerMove);
+      element.removeEventListener("pointermove", onPointerMove);
+      element.removeEventListener("touchmove", onTouchMove);
+      element.removeEventListener("touchstart", onTouchMove);
+    } else {
+      element.removeEventListener("mousemove", onMouseMove);
+      element.removeEventListener("touchmove", onTouchMove);
+      element.removeEventListener("touchstart", onTouchMove);
+    }
+    window.addEventListener("resize", onWindowResize);
+    window.removeEventListener("scroll", onWindowScroll);
   };
 
   function Particle(x, y, canvasItem) {
