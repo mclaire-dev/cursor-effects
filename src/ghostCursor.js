@@ -66,6 +66,7 @@ export function ghostCursor(options) {
     loop();
   }
 
+  // Bind events that are needed
   function bindEvents() {
     if ("onpointermove" in window && "onpointerenter" in window) {
       element.addEventListener("pointerenter", onPointerMove);
@@ -88,7 +89,7 @@ export function ghostCursor(options) {
     window.addEventListener("resize", onWindowResize);
   }
 
-  function onWindowResize() {
+  function onWindowResize(e) {
     width = window.innerWidth;
     height = window.innerHeight;
 
@@ -157,7 +158,7 @@ export function ghostCursor(options) {
     if (particles.length == 0) {
       return;
     }
-
+    
     context.clearRect(0, 0, width, height);
 
     // Update
@@ -195,13 +196,13 @@ export function ghostCursor(options) {
       element.removeEventListener("touchmove", onTouchMove);
       element.removeEventListener("touchstart", onTouchMove);
     }
+    window.removeEventListener("resize", onWindowResize);
+  };
 
-    window.addEventListener("resize", onWindowResize);
-  }
-    /**
+  /**
    * Particles
    */
-
+  
   function Particle(x, y, image) {
     this.initialLifeSpan = lifeSpan;
     this.lifeSpan = lifeSpan;

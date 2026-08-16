@@ -184,7 +184,7 @@ export function trailingCursor(options) {
       element.removeEventListener("touchmove", onTouchMove);
       element.removeEventListener("touchstart", onTouchMove);
     }
-    window.addEventListener("resize", onWindowResize);
+    window.removeEventListener("resize", onWindowResize);
   }
 
   /**

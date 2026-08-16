@@ -15,7 +15,7 @@ export function fairyDustCursor(options) {
   const canvImages = [];
   let canvas, context, animationFrame;
 
-  const char = options.fairySymbol || "*";
+  const char = options?.fairySymbol || "*";
 
   const prefersReducedMotion = window.matchMedia(
     "(prefers-reduced-motion: reduce)"
@@ -110,9 +110,6 @@ export function fairyDustCursor(options) {
       });
     }
     window.addEventListener("resize", onWindowResize);
-    window.addEventListener("scroll", onWindowScroll, {
-      passive: true,
-    });
   }
 
   function onWindowResize(e) {
@@ -125,14 +122,6 @@ export function fairyDustCursor(options) {
     } else {
       canvas.width = width;
       canvas.height = height;
-    }
-  }
-  function onWindowScroll() {
-    if (hasWrapperEl) {
-      const boundingRect = element.getBoundingClientRect();
-
-      cursor.x = cursor.clientX - boundingRect.left;
-      cursor.y = cursor.clientY - boundingRect.top;
     }
   }
 
@@ -245,7 +234,6 @@ export function fairyDustCursor(options) {
       element.removeEventListener("touchstart", onTouchMove);
     }
     window.addEventListener("resize", onWindowResize);
-    window.removeEventListener("scroll", onWindowScroll);
   };
 
   function Particle(x, y, canvasItem) {
